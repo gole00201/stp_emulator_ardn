@@ -10,8 +10,11 @@ String list_of_bmk[STP_CNT] = {"009", "010", "011",
                                "021"};
 Stp arr_stp[STP_CNT];
 String buf = "";
-int iterator = 0;
-int bmk_cnt = 0;
+const int timeToStpiter = 1000;
+int randPresure = 0;
+unsigned int currentTime = 0;
+int currentStp = 0;
+
 void SetUpStp(String *cfg, Stp *ar_stp)
 {
     for (size_t i = 0; i < STP_CNT; ++i)
@@ -82,8 +85,6 @@ void genGetPr(Stp bmk)
     Serial.print("bmk=" + bmk.name + " pr0=000 pr1=" + bmk.pr1 + " pr2=" + bmk.pr2 + " er=00000000 bmkC=007 prC0=003 prC1=000 erC=00000000 cs=016\r\n");
 }
 
-
-
 void setup()
 {
     SetUpStp(list_of_bmk, arr_stp);
@@ -97,24 +98,27 @@ void loop()
 {
     while (Serial.available())
     {
-
         buf = readCom();
         genAnswer(buf, (Stp *)arr_stp);
-        if(iterator == 5)
+        if (millis() - currentTime >= timeToStpiter)
         {
-            if(bmk_cnt == 12){
-                bmk_cnt = 0;
-            } else {
-                arr_stp[bmk_cnt].pr1 = "100";
-                arr_stp[bmk_cnt].pr2 = "105";
-                if (bmk_cnt != 0)
-                {
-                    arr_stp[bmk_cnt - 1].pr1 = "000";
-                    arr_stp[bmk_cnt - 1].pr2 = "000";
-                }
-                ++bmk_cnt;
+            int randomInt = random(300, 501);
+            arr_stp[currentStp].pr1 = String(randomInt);
+            arr_stp[currentStp].pr2 = arr_stp[currentStp].pr1;
+            if (randomInt > 450 )
+            {
+                arr_stp[currentStp].stup = "09";
+            } else if (randomInt )
+            {
+                /* code */
+            }
+            
+            currentStp++;
+            if (currentStp > 13)
+            {
+                currentStp = 0;
             }
         }
-        ++iterator;
+        currentTime = millis();
     }
 }
