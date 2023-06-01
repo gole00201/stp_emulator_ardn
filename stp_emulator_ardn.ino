@@ -1,7 +1,7 @@
 #include "stp.hpp"
 #define STP_CNT 13
 #define DEBUG_LVL 0
-#define BAUD 38400
+#define BAUD 9600
 
 String list_of_bmk[STP_CNT] = {"009", "010", "011",
                                "012", "013", "014",
@@ -10,7 +10,7 @@ String list_of_bmk[STP_CNT] = {"009", "010", "011",
                                "021"};
 Stp arr_stp[STP_CNT];
 String buf = "";
-const int timeToStpiter = 1000;
+const int timeToStpiter = 3000;
 int randPresure = 0;
 unsigned int currentTime = 0;
 int currentStp = 0;
@@ -99,26 +99,22 @@ void loop()
     while (Serial.available())
     {
         buf = readCom();
-        genAnswer(buf, (Stp *)arr_stp);
         if (millis() - currentTime >= timeToStpiter)
         {
             int randomInt = random(300, 501);
             arr_stp[currentStp].pr1 = String(randomInt);
             arr_stp[currentStp].pr2 = arr_stp[currentStp].pr1;
-            if (randomInt > 450 )
-            {
-                arr_stp[currentStp].stup = "09";
-            } else if (randomInt )
-            {
-                /* code */
+            if(currentStp > 0){
+                arr_stp[currentStp-1].pr1 = "0";
+                arr_stp[currentStp-1].pr2 = "0";
             }
-            
             currentStp++;
             if (currentStp > 13)
             {
                 currentStp = 0;
             }
+            currentTime = millis();
         }
-        currentTime = millis();
+        genAnswer(buf, (Stp *)arr_stp);
     }
 }
