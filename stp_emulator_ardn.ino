@@ -1,7 +1,7 @@
 #include "stp.hpp"
 #define STP_CNT 13
 #define DEBUG_LVL 0
-#define BAUD 9600
+#define BAUD 57600
 
 String list_of_bmk[STP_CNT] = {"009", "010", "011",
                                "012", "013", "014",
@@ -10,10 +10,11 @@ String list_of_bmk[STP_CNT] = {"009", "010", "011",
                                "021"};
 Stp arr_stp[STP_CNT];
 String buf = "";
-const int timeToStpiter = 3000;
+const int timeToStpiter = 8000;
 int randPresure = 0;
 unsigned int currentTime = 0;
 int currentStp = 0;
+void(* resetFunc) (void) = 0;
 
 void SetUpStp(String *cfg, Stp *ar_stp)
 {
@@ -63,6 +64,7 @@ int genAnswer(String com, Stp *arr_stp)
     }
     if (com_part.equals("gPr"))
     {
+
         for (int i = 0; i < STP_CNT; ++i)
         {
             if (bmk.equals(arr_stp[i].name))
@@ -77,6 +79,22 @@ int genAnswer(String com, Stp *arr_stp)
 
 void genGetStatus(Stp bmk)
 {
+    int randomInt = random(450, 550);
+    int randomInt2 = random(-10, 15);
+    arr_stp[currentStp].pr1 = String(randomInt);
+    arr_stp[currentStp].pr2 = String(randomInt - randomInt2);
+    if (millis() - currentTime >= timeToStpiter)
+    {
+        arr_stp[currentStp].pr1 = "000";
+        arr_stp[currentStp].pr2 = "000";
+        currentStp++;
+        if (currentStp > 13)
+        {
+            resetFunc();
+            currentStp = 0;
+        }
+        currentTime = millis();
+    }
     Serial.print("bmk=" + bmk.name + " bmkS=007 bmkSK=2 pr=" + bmk.pr1 + " pr0=" + bmk.pr1 + " pr1=" + bmk.pr1 + " temp=+232 P05=064 P10=125 P15=219 P20=316 P25=401 P30=489 P35=581 Err=00000000 uPit=23 temHeart=+05 timeW=00003053 prAtmCal0=+00 prAtmCal1=+00 Styp=00 l=000 temp2=+242 timeR=000006 cs=114\r\n");
 }
 
@@ -94,27 +112,12 @@ void setup()
     };
 }
 
+
 void loop()
 {
     while (Serial.available())
     {
         buf = readCom();
-        if (millis() - currentTime >= timeToStpiter)
-        {
-            int randomInt = random(300, 501);
-            arr_stp[currentStp].pr1 = String(randomInt);
-            arr_stp[currentStp].pr2 = arr_stp[currentStp].pr1;
-            if(currentStp > 0){
-                arr_stp[currentStp-1].pr1 = "0";
-                arr_stp[currentStp-1].pr2 = "0";
-            }
-            currentStp++;
-            if (currentStp > 13)
-            {
-                currentStp = 0;
-            }
-            currentTime = millis();
-        }
         genAnswer(buf, (Stp *)arr_stp);
     }
 }
